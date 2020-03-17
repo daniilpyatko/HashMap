@@ -4,7 +4,11 @@
 
 using namespace std;
 
-template <class KeyType, class ValueType, class Hash = std::hash<KeyType> >
+
+//  HashMap that uses the rescaling technique to maintain the
+//  size of the structure close to the number of elements inside.
+//  More precise info is near the rebuild method.
+template <class KeyType, class ValueType, class Hash = std::hash<KeyType>>
 class HashMap {
  public:
   static constexpr size_t kMinCapacity = 4;
@@ -119,27 +123,27 @@ class HashMap {
 
   bool empty() const { return cnt_elements_ == 0; }
 
-  // ForwardIterator for HashMap
+//  ForwardIterator for HashMap
   class iterator {
    public:
     iterator() {}
-    iterator(pair<int, int> _pos, HashMap* phash_map) : pos(_pos), phash_map_(phash_map) {}
-    bool operator==(const iterator& other) { return pos == other.pos; }
-    bool operator!=(const iterator& other) { return !(pos == other.pos); }
+    iterator(pair<int, int> pos, HashMap* phash_map) : pos_(pos), phash_map_(phash_map) {}
+    bool operator==(const iterator& other) { return pos_ == other.pos_; }
+    bool operator!=(const iterator& other) { return !(pos_ == other.pos_); }
     iterator operator++(int foo) {
-      iterator tmp = iterator(pos, h);
-      pos = phash_map_->findNext(pos);
+      iterator tmp = iterator(pos_, phash_map_);
+      pos_ = phash_map_->findNext(pos_);
       return tmp;
     }
     iterator operator++() {
-      pos = phash_map_->findNext(pos);
+      pos_ = phash_map_->findNext(pos_);
       return *this;
     }
     pair<const KeyType, ValueType>& operator*() {
-      return phash_map_->all_[pos.first][pos.second];
+      return phash_map_->all_[pos_.first][pos_.second];
     }
     pair<const KeyType, ValueType>* operator->() {
-      return &(phash_map_->all_[pos.first][pos.second]);
+      return &(phash_map_->all_[pos_.first][pos_.second]);
     }
 
    private:
@@ -153,27 +157,27 @@ class HashMap {
   class const_iterator {
    public:
     const_iterator() {}
-    const_iterator(pair<int, int> _pos, const HashMap* phash_map) : pos(_pos), phash_map_(phash_map) {}
-    bool operator==(const const_iterator& other) { return pos == other.pos; }
-    bool operator!=(const const_iterator& other) { return !(pos == other.pos); }
+    const_iterator(pair<int, int> pos, const HashMap* phash_map) : pos_(pos), phash_map_(phash_map) {}
+    bool operator==(const const_iterator& other) { return pos_ == other.pos_; }
+    bool operator!=(const const_iterator& other) { return !(pos_ == other.pos_); }
     const_iterator operator++(int foo) {
-      const_iterator tmp = const_iterator(pos, phash_map_);
-      pos = phash_map_->findNext(pos);
+      const_iterator tmp = const_iterator(pos_, phash_map_);
+      pos_ = phash_map_->findNext(pos_);
       return tmp;
     }
     const_iterator operator++() {
-      pos = phash_map_->findNext(pos);
+      pos_ = phash_map_->findNext(pos_);
       return *this;
     }
     const pair<const KeyType, ValueType>& operator*() {
-      return phash_map_->all_[pos.first][pos.second];
+      return phash_map_->all_[pos_.first][pos_.second];
     }
     const pair<const KeyType, ValueType>* operator->() {
-      return &(phash_map_->all_[pos.first][pos.second]);
+      return &(phash_map_->all_[pos_.first][pos_.second]);
     }
 
    private:
-    pair<int, int> pos;
+    pair<int, int> pos_;
     const HashMap* phash_map_;
   };
   const_iterator begin() const { return const_iterator(findNext(kBeforeBeginPos), this); }
@@ -199,10 +203,10 @@ class HashMap {
   }
 
  private:
-  // indicates the position before the first element
-  static constexpr pair<int,int> kBeforeBeginPos = {-1, 0};
-  // indicates the position after the last element
-  static constexpr pair<int,int> kAfterEndPos = {-2, 0};
+//  indicates the position before the first element
+  const pair<int,int> kBeforeBeginPos = {-1, 0};
+//  indicates the position after the last element
+  const pair<int,int> kAfterEndPos = {-2, 0};
   size_t cnt_elements_ = 0;
   size_t capacity_ = kMinCapacity;
   vector<vector<pair<const KeyType, ValueType> > > all_;
@@ -232,9 +236,10 @@ class HashMap {
     return kAfterEndPos;
     }
   }
+
 //  Two conditions trigger the call of this function.
-//  Expand condition: cnt_elements_ > capacity_ * kExpand.
-//  Shrink condition: cnt_elements_ < capacity_ / kShrink.
+//  1. Expand condition: cnt_elements_ > capacity_ * kExpand.
+//  2. Shrink condition: cnt_elements_ < capacity_ / kShrink.
   void rebuild() {
     int newcapacity = max(static_cast<size_t>(kMinCapacity), cnt_elements_ * kExpand);
     capacity_ = newcapacity;
