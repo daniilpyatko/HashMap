@@ -55,7 +55,7 @@ class HashMap {
 
 
   pair <int, int> insert(pair<const KeyType, ValueType> x) {
-  	checkRebuild();
+    checkRebuild();
     bool found = false;
     size_t ind = hasher_(x.first) % capacity_;
     size_t ipos = 0;
@@ -66,16 +66,16 @@ class HashMap {
       }
     }
     if (found) {
-	  return {static_cast<int>(ind), ipos};
+      return {static_cast<int>(ind), ipos};
     }
 
-	all_[ind].push_back(x);
-	cnt_elements_++;
-	return {static_cast<int>(ind), static_cast<int>(all_[ind].size() - 1)};
+    all_[ind].push_back(x);
+    cnt_elements_++;
+    return {static_cast<int>(ind), static_cast<int>(all_[ind].size() - 1)};
   }
 
   void erase(KeyType x) {
-  	checkRebuild();
+    checkRebuild();
     size_t ind = hasher_(x) % capacity_;
     bool found = false;
     vector<pair<const KeyType, ValueType> > tmpall_;
@@ -102,7 +102,7 @@ class HashMap {
     if (cur != end()) {
       return cur->second;
     } else {
-	  auto pos = iterator(insert({x, ValueType()}), this);
+      auto pos = iterator(insert({x, ValueType()}), this);
       return pos->second;
     }
   }
@@ -249,12 +249,12 @@ class HashMap {
   }
 
   void checkRebuild(){
-	if (cnt_elements_ < capacity_ / kShrink) {
+    if (cnt_elements_ < capacity_ / kShrink) {
       rebuild();
     } else if (cnt_elements_ > capacity_ * kExpand) {
-	  rebuild();
-	}
-  }
+      rebuild();
+    }
+ }
 
   void rebuild() {
     int newcapacity = max(static_cast<size_t>(kMinCapacity), cnt_elements_ * kExpand);
