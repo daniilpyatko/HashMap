@@ -5,9 +5,10 @@
 using namespace std;
 
 
-//  HashMap that uses the rescaling technique to maintain the
-//  size of the structure close to the number of elements inside.
-//  More precise info is near the rebuild method.
+//  HashMap that uses separate chaining(open hashing) for collision resolution.
+//  The rescaling technique keeps the size of the structure close to the number of elements inside
+//  and thus lets the naive traversal of all elements to work in O(elements_inside).
+//  The exact conditions for rescaling are near the checkRebuild method.
 template <class KeyType, class ValueType, class Hash = std::hash<KeyType>>
 class HashMap {
  public:
@@ -36,13 +37,13 @@ class HashMap {
     }
   }
 
-  HashMap& operator=(const HashMap& h1) {
-    if (this != &h1) {
-      hasher_ = h1.hasher_;
-      all_.resize(h1.all_.size());
+  HashMap& operator=(const HashMap& other) {
+    if (this != &other) {
+      hasher_ = other.hasher_;
+      all_.resize(other.all_.size());
       for (size_t i = 0; i < all_.size(); ++i) {
-        for (size_t j = 0; j < h1.all_[i].size(); ++j) {
-          all_[i].push_back(h1.all_[i][j]);
+        for (size_t j = 0; j < other.all_[i].size(); ++j) {
+          all_[i].push_back(other.all_[i][j]);
         }
       }
     }
@@ -51,24 +52,30 @@ class HashMap {
 
   Hash hash_function() const { return hasher_; }
 
-  void insert(pair<const KeyType, ValueType> x) {
+
+
+  pair <int, int> insert(pair<const KeyType, ValueType> x) {
+  	checkRebuild();
     bool found = false;
     size_t ind = hasher_(x.first) % capacity_;
+    size_t ipos = 0;
     for (size_t i = 0; i < all_[ind].size(); ++i) {
       if (all_[ind][i].first == x.first) {
         found = true;
+        ipos = i;
       }
     }
-    if (!found) {
-      all_[ind].push_back(x);
-      cnt_elements_++;
-      if (cnt_elements_ > capacity_ * kExpand) {
-        rebuild();
-      }
+    if (found) {
+	  return {static_cast<int>(ind), ipos};
     }
+
+	all_[ind].push_back(x);
+	cnt_elements_++;
+	return {static_cast<int>(ind), static_cast<int>(all_[ind].size() - 1)};
   }
 
   void erase(KeyType x) {
+  	checkRebuild();
     size_t ind = hasher_(x) % capacity_;
     bool found = false;
     vector<pair<const KeyType, ValueType> > tmpall_;
@@ -82,14 +89,12 @@ class HashMap {
     if (!found) {
       return;
     }
+
     all_[ind].clear();
     for (size_t i = 0; i < tmpall_.size(); ++i) {
       all_[ind].push_back(tmpall_[i]);
     }
     cnt_elements_--;
-    if (cnt_elements_ < capacity_ / kShrink) {
-      rebuild();
-    }
   }
 
   ValueType& operator[](KeyType x) {
@@ -97,9 +102,8 @@ class HashMap {
     if (cur != end()) {
       return cur->second;
     } else {
-      insert({x, ValueType()});
-      iterator tmp = find(x);
-      return tmp->second;
+	  auto pos = iterator(insert({x, ValueType()}), this);
+      return pos->second;
     }
   }
 
@@ -123,7 +127,10 @@ class HashMap {
 
   bool empty() const { return cnt_elements_ == 0; }
 
-//  ForwardIterator for HashMap
+
+//  ForwardIterator for HashMap.
+//  Stores the pair of numbers (chain's position in the structure, position in the chain) for the element it is pointing at.
+//  There are also two special states kBeforeBeginPos and kAfterEndPos.
   class iterator {
    public:
     iterator() {}
@@ -152,6 +159,7 @@ class HashMap {
   };
   iterator begin() { return iterator(findNext(kBeforeBeginPos), this); }
   iterator end() { return iterator(kAfterEndPos, this); }
+
 
 //  Same as iterator but doesn't allow changes
   class const_iterator {
@@ -202,6 +210,7 @@ class HashMap {
     return end();
   }
 
+
  private:
 //  indicates the position before the first element
   const pair<int,int> kBeforeBeginPos = {-1, 0};
@@ -221,9 +230,11 @@ class HashMap {
     }
     return kAfterEndPos;
   }
+
   if(pos == kAfterEndPos){
     return kAfterEndPos;
   }
+
   if (pos.second + 1 < static_cast<int>(all_[pos.first].size())) {
     pos.second++;
     return pos;
@@ -237,9 +248,14 @@ class HashMap {
     }
   }
 
-//  Two conditions trigger the call of this function.
-//  1. Expand condition: cnt_elements_ > capacity_ * kExpand.
-//  2. Shrink condition: cnt_elements_ < capacity_ / kShrink.
+  void checkRebuild(){
+	if (cnt_elements_ < capacity_ / kShrink) {
+      rebuild();
+    } else if (cnt_elements_ > capacity_ * kExpand) {
+	  rebuild();
+	}
+  }
+
   void rebuild() {
     int newcapacity = max(static_cast<size_t>(kMinCapacity), cnt_elements_ * kExpand);
     capacity_ = newcapacity;
