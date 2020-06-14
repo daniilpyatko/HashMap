@@ -54,10 +54,15 @@ class HashMap {
 
 
 
-  pair <int, int> insert(pair<const KeyType, ValueType> x) {
+  pair <int, int> insert(pair<const KeyType, ValueType> x, pair<size_t, bool> hsh = {0, false}) {
     checkRebuild();
     bool found = false;
-    size_t ind = hasher_(x.first) % capacity_;
+    size_t ind = 0;
+    if(hsh.second){
+		ind = hsh.first % capacity_;
+    } else {
+        ind = hasher_(x.first) % capacity_;
+    }
     size_t ipos = 0;
     for (size_t i = 0; i < all_[ind].size(); ++i) {
       if (all_[ind][i].first == x.first) {
@@ -98,17 +103,19 @@ class HashMap {
   }
 
   ValueType& operator[](KeyType x) {
-    iterator cur = find(x);
+  	size_t hsh = hasher_(x);
+    iterator cur = find(x, {hsh, true});
     if (cur != end()) {
       return cur->second;
     } else {
-      auto pos = iterator(insert({x, ValueType()}), this);
+      auto pos = iterator(insert({x, ValueType()}, {hsh, true}), this);
       return pos->second;
     }
   }
 
   const ValueType& at(KeyType x) const {
-    const_iterator cur = find(x);
+  	size_t hsh = hasher_(x);
+    const_iterator cur = find(x, {hsh, true});
     if (cur != end()) {
       return cur->second;
     } else {
@@ -190,8 +197,13 @@ class HashMap {
   };
   const_iterator begin() const { return const_iterator(findNext(kBeforeBeginPos), this); }
   const_iterator end() const { return const_iterator(kAfterEndPos, this); }
-  iterator find(KeyType x) {
-    size_t ind = hasher_(x) % capacity_;
+  iterator find(KeyType x, pair<size_t, bool> hsh = {0, false}) {
+    size_t ind = 0;
+    if(hsh.second){
+		ind = hsh.first % capacity_;
+    } else {
+        ind = hasher_(x) % capacity_;
+    }
     for (size_t i = 0; i < all_[ind].size(); ++i) {
       if (x == all_[ind][i].first) {
         return iterator({static_cast<int>(ind), i}, this);
@@ -200,8 +212,13 @@ class HashMap {
     return end();
   }
 
-  const_iterator find(KeyType x) const {
-    size_t ind = hasher_(x) % capacity_;
+  const_iterator find(KeyType x, pair<size_t, bool> hsh = {0, false}) const {
+    size_t ind = 0;
+    if(hsh.second){
+		ind = hsh.first % capacity_;
+    } else {
+        ind = hasher_(x) % capacity_;
+    }
     for (size_t i = 0; i < all_[ind].size(); ++i) {
       if (x == all_[ind][i].first) {
         return const_iterator({static_cast<int>(ind), i}, this);
@@ -222,30 +239,30 @@ class HashMap {
   Hash hasher_;
 
   pair<int, int> findNext(pair < int, int > pos) const {
-  if (pos == kBeforeBeginPos) {
-    for (size_t i = 0; i < all_.size(); ++i) {
-      if (all_[i].size() != 0) {
-        return {i, 0};
+    if (pos == kBeforeBeginPos) {
+      for (size_t i = 0; i < all_.size(); ++i) {
+        if (all_[i].size() != 0) {
+          return {i, 0};
+        }
       }
+      return kAfterEndPos;
     }
-    return kAfterEndPos;
-  }
 
-  if(pos == kAfterEndPos){
-    return kAfterEndPos;
-  }
+    if(pos == kAfterEndPos){
+      return kAfterEndPos;
+    }
 
-  if (pos.second + 1 < static_cast<int>(all_[pos.first].size())) {
-    pos.second++;
-    return pos;
-  } else {
-    for (size_t i = pos.first + 1; i < capacity_; ++i) {
-      if (all_[i].size() != 0) {
-        return {i, 0};
+    if (pos.second + 1 < static_cast<int>(all_[pos.first].size())) {
+      pos.second++;
+      return pos;
+    } else {
+      for (size_t i = pos.first + 1; i < capacity_; ++i) {
+        if (all_[i].size() != 0) {
+          return {i, 0};
+        }
       }
-    }
-    return kAfterEndPos;
-    }
+      return kAfterEndPos;
+	}
   }
 
   void checkRebuild(){
@@ -254,7 +271,7 @@ class HashMap {
     } else if (cnt_elements_ > capacity_ * kExpand) {
       rebuild();
     }
- }
+  }
 
   void rebuild() {
     int newcapacity = max(static_cast<size_t>(kMinCapacity), cnt_elements_ * kExpand);
@@ -265,12 +282,6 @@ class HashMap {
         nall[hasher_(all_[i][j].first) % capacity_].push_back(all_[i][j]);
       }
     }
-    all_.clear();
-    all_.resize(capacity_);
-    for (size_t i = 0; i < capacity_; ++i) {
-      for (size_t j = 0; j < nall[i].size(); ++j) {
-        all_[i].push_back(nall[i][j]);
-      }
-    }
+    all_.swap(nall);
   }
 };
