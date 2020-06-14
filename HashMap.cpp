@@ -200,9 +200,9 @@ class HashMap {
   iterator find(KeyType x, pair<size_t, bool> hsh = {0, false}) {
     size_t ind = 0;
     if (hsh.second) {
-        ind = hsh.first % capacity_;
+      ind = hsh.first % capacity_;
     } else {
-        ind = hasher_(x) % capacity_;
+      ind = hasher_(x) % capacity_;
     }
     for (size_t i = 0; i < all_[ind].size(); ++i) {
       if (x == all_[ind][i].first) {
@@ -215,9 +215,9 @@ class HashMap {
   const_iterator find(KeyType x, pair<size_t, bool> hsh = {0, false}) const {
     size_t ind = 0;
     if (hsh.second) {
-        ind = hsh.first % capacity_;
+      ind = hsh.first % capacity_;
     } else {
-        ind = hasher_(x) % capacity_;
+      ind = hasher_(x) % capacity_;
     }
     for (size_t i = 0; i < all_[ind].size(); ++i) {
       if (x == all_[ind][i].first) {
