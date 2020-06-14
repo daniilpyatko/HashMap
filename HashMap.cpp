@@ -58,10 +58,10 @@ class HashMap {
     checkRebuild();
     bool found = false;
     size_t ind = 0;
-    if(hsh.second){
-		ind = hsh.first % capacity_;
+    if (hsh.second) {
+      ind = hsh.first % capacity_;
     } else {
-        ind = hasher_(x.first) % capacity_;
+      ind = hasher_(x.first) % capacity_;
     }
     size_t ipos = 0;
     for (size_t i = 0; i < all_[ind].size(); ++i) {
@@ -103,7 +103,7 @@ class HashMap {
   }
 
   ValueType& operator[](KeyType x) {
-  	size_t hsh = hasher_(x);
+    size_t hsh = hasher_(x);
     iterator cur = find(x, {hsh, true});
     if (cur != end()) {
       return cur->second;
@@ -114,7 +114,7 @@ class HashMap {
   }
 
   const ValueType& at(KeyType x) const {
-  	size_t hsh = hasher_(x);
+    size_t hsh = hasher_(x);
     const_iterator cur = find(x, {hsh, true});
     if (cur != end()) {
       return cur->second;
@@ -199,8 +199,8 @@ class HashMap {
   const_iterator end() const { return const_iterator(kAfterEndPos, this); }
   iterator find(KeyType x, pair<size_t, bool> hsh = {0, false}) {
     size_t ind = 0;
-    if(hsh.second){
-		ind = hsh.first % capacity_;
+    if (hsh.second) {
+        ind = hsh.first % capacity_;
     } else {
         ind = hasher_(x) % capacity_;
     }
@@ -214,8 +214,8 @@ class HashMap {
 
   const_iterator find(KeyType x, pair<size_t, bool> hsh = {0, false}) const {
     size_t ind = 0;
-    if(hsh.second){
-		ind = hsh.first % capacity_;
+    if (hsh.second) {
+        ind = hsh.first % capacity_;
     } else {
         ind = hasher_(x) % capacity_;
     }
@@ -262,7 +262,7 @@ class HashMap {
         }
       }
       return kAfterEndPos;
-	}
+    }
   }
 
   void checkRebuild(){
