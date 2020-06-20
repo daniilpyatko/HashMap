@@ -2,10 +2,8 @@
 
 #include <vector>
 
-using namespace std;
 
-
-//  HashMap that uses separate chaining(open hashing) for collision resolution.
+//  HashMap that uses separate chaining for collision resolution.
 //  The rescaling technique keeps the size of the structure close to the number of elements inside
 //  and thus lets the naive traversal of all elements to work in O(elements_inside).
 //  The exact conditions for rescaling are near the checkRebuild method.
@@ -27,7 +25,7 @@ class HashMap {
     }
   }
 
-  HashMap(std::initializer_list<pair<const KeyType, ValueType> > init,
+  HashMap(std::initializer_list<std::pair<const KeyType, ValueType> > init,
       Hash hasher_ = Hash()) : hasher_(hasher_) {
     all_.resize(capacity_);
     auto b = init.begin();
@@ -52,9 +50,7 @@ class HashMap {
 
   Hash hash_function() const { return hasher_; }
 
-
-
-  pair <int, int> insert(pair<const KeyType, ValueType> x, pair<size_t, bool> hsh = {0, false}) {
+  std::pair<int, int> insert(std::pair<const KeyType, ValueType> x, std::pair<size_t, bool> hsh = {0, false}) {
     checkRebuild();
     bool found = false;
     size_t ind = 0;
@@ -83,7 +79,7 @@ class HashMap {
     checkRebuild();
     size_t ind = hasher_(x) % capacity_;
     bool found = false;
-    vector<pair<const KeyType, ValueType> > tmpall_;
+    std::vector<std::pair<const KeyType, ValueType> > tmpall_;
     for (size_t i = 0; i < all_[ind].size(); ++i) {
       if (all_[ind][i].first == x) {
         found = true;
@@ -119,7 +115,7 @@ class HashMap {
     if (cur != end()) {
       return cur->second;
     } else {
-      throw out_of_range("Element is not in the HashMap");
+      throw std::out_of_range("Element is not in the HashMap");
     }
   }
 
@@ -141,7 +137,7 @@ class HashMap {
   class iterator {
    public:
     iterator() {}
-    iterator(pair<int, int> pos, HashMap* phash_map) : pos_(pos), phash_map_(phash_map) {}
+    iterator(std::pair<int, int> pos, HashMap* phash_map) : pos_(pos), phash_map_(phash_map) {}
     bool operator==(const iterator& other) { return pos_ == other.pos_; }
     bool operator!=(const iterator& other) { return !(pos_ == other.pos_); }
     iterator operator++(int foo) {
@@ -153,15 +149,15 @@ class HashMap {
       pos_ = phash_map_->findNext(pos_);
       return *this;
     }
-    pair<const KeyType, ValueType>& operator*() {
+    std::pair<const KeyType, ValueType>& operator*() {
       return phash_map_->all_[pos_.first][pos_.second];
     }
-    pair<const KeyType, ValueType>* operator->() {
+    std::pair<const KeyType, ValueType>* operator->() {
       return &(phash_map_->all_[pos_.first][pos_.second]);
     }
 
    private:
-    pair<int, int> pos_;
+    std::pair<int, int> pos_;
     HashMap* phash_map_;
   };
   iterator begin() { return iterator(findNext(kBeforeBeginPos), this); }
@@ -172,7 +168,7 @@ class HashMap {
   class const_iterator {
    public:
     const_iterator() {}
-    const_iterator(pair<int, int> pos, const HashMap* phash_map) : pos_(pos), phash_map_(phash_map) {}
+    const_iterator(std::pair<int, int> pos, const HashMap* phash_map) : pos_(pos), phash_map_(phash_map) {}
     bool operator==(const const_iterator& other) { return pos_ == other.pos_; }
     bool operator!=(const const_iterator& other) { return !(pos_ == other.pos_); }
     const_iterator operator++(int foo) {
@@ -184,20 +180,20 @@ class HashMap {
       pos_ = phash_map_->findNext(pos_);
       return *this;
     }
-    const pair<const KeyType, ValueType>& operator*() {
+    const std::pair<const KeyType, ValueType>& operator*() {
       return phash_map_->all_[pos_.first][pos_.second];
     }
-    const pair<const KeyType, ValueType>* operator->() {
+    const std::pair<const KeyType, ValueType>* operator->() {
       return &(phash_map_->all_[pos_.first][pos_.second]);
     }
 
    private:
-    pair<int, int> pos_;
+    std::pair<int, int> pos_;
     const HashMap* phash_map_;
   };
   const_iterator begin() const { return const_iterator(findNext(kBeforeBeginPos), this); }
   const_iterator end() const { return const_iterator(kAfterEndPos, this); }
-  iterator find(KeyType x, pair<size_t, bool> hsh = {0, false}) {
+  iterator find(KeyType x, std::pair<size_t, bool> hsh = {0, false}) {
     size_t ind = 0;
     if (hsh.second) {
       ind = hsh.first % capacity_;
@@ -212,7 +208,7 @@ class HashMap {
     return end();
   }
 
-  const_iterator find(KeyType x, pair<size_t, bool> hsh = {0, false}) const {
+  const_iterator find(KeyType x, std::pair<size_t, bool> hsh = {0, false}) const {
     size_t ind = 0;
     if (hsh.second) {
       ind = hsh.first % capacity_;
@@ -230,15 +226,15 @@ class HashMap {
 
  private:
 //  indicates the position before the first element
-  const pair<int,int> kBeforeBeginPos = {-1, 0};
+  const std::pair<int,int> kBeforeBeginPos = {-1, 0};
 //  indicates the position after the last element
-  const pair<int,int> kAfterEndPos = {-2, 0};
+  const std::pair<int,int> kAfterEndPos = {-2, 0};
   size_t cnt_elements_ = 0;
   size_t capacity_ = kMinCapacity;
-  vector<vector<pair<const KeyType, ValueType> > > all_;
+  std::vector<std::vector<std::pair<const KeyType, ValueType> > > all_;
   Hash hasher_;
 
-  pair<int, int> findNext(pair < int, int > pos) const {
+  std::pair<int, int> findNext(std::pair < int, int > pos) const {
     if (pos == kBeforeBeginPos) {
       for (size_t i = 0; i < all_.size(); ++i) {
         if (all_[i].size() != 0) {
@@ -274,9 +270,9 @@ class HashMap {
   }
 
   void rebuild() {
-    int newcapacity = max(static_cast<size_t>(kMinCapacity), cnt_elements_ * kExpand);
+    int newcapacity = std::max(static_cast<size_t>(kMinCapacity), cnt_elements_ * kExpand);
     capacity_ = newcapacity;
-    vector<vector<pair<const KeyType, ValueType> > > nall(capacity_);
+    std::vector<std::vector<std::pair<const KeyType, ValueType> > > nall(capacity_);
     for (size_t i = 0; i < all_.size(); ++i) {
       for (size_t j = 0; j < all_[i].size(); ++j) {
         nall[hasher_(all_[i][j].first) % capacity_].push_back(all_[i][j]);
